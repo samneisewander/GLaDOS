@@ -20,19 +20,6 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# # Init logger
-# if not os.path.exists("../logs"):
-#     os.mkdir("../logs")
-
-# logging.basicConfig(
-#     filename='../logs/GLaDOS.log', 
-#     encoding='utf-8', 
-#     level=logging.DEBUG,
-#     format='%(asctime)s %(message)s', 
-#     datefmt='%m/%d/%Y %I:%M:%S %p'
-# )
-# logger = logging.getLogger("GLaDOS")
-
 # --- Ready up ---
 @bot.event
 async def on_ready() -> None:
