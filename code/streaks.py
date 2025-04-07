@@ -5,29 +5,27 @@ import os
 from datetime import timedelta, timezone, datetime, time
 from discord.ext import commands, tasks
 
-# --- Initialize --- 
+# --- Initialize ---
 
 class StreaksCog(commands.Cog):
 
-    def __init__(self, bot: commands.Bot, channel: discord.TextChannel, logger):
+    def __init__(self, bot: commands.Bot, channel: discord.TextChannel):
         self.bot = bot
         self.channel = channel
         self._last_member = None
-        self.logger = logger
 
         # Ensure streaks.json exists in current
-        if not os.path.exists("./streaks.json"):
-            open("streaks.json", "w").close()
+        if not os.path.exists("./data/streaks.json"):
+            os.mkdir("./data")
+            open("./data/streaks.json", "w").close()
 
         # Initialize data store
         self.data = {}
-        with open("streaks.json", "r") as file:
+        with open("./data/streaks.json", "r") as file:
             try:
                 self.data = json.load(file)
             except Exception as e:
-                self.logger.error(f"ERROR: Could not load JSON from streaks.json: {e}")
                 self.data = {}
-        self.logger.info(f"Streaks data initialized to {self.data}.")
 
     def increment_streak(self, user: discord.User) -> int:
         """Increments the user's streak by one (defaulting to 1 if there user is not found in dict) if the user has not already had their streak incremented today. 
@@ -40,15 +38,9 @@ class StreaksCog(commands.Cog):
         streak = self.data.get(str(user.id), [user.name, None, 0, 0])
         previousDate = None if streak[1] is None else datetime.fromtimestamp(streak[1]).date()
         today = datetime.today().date()
-        
-        self.logger.info(f"Checking streak for {user.name}")
-        self.logger.info(f"\tCurrent streak: {streak[2]}")
-        self.logger.info(f"\tLast recorded update: {previousDate}")
-        self.logger.info(f"\tToday: {today}")
 
         if streak[1] is None or previousDate != today:
             # Valid window to increase streak
-            self.logger.info("\tValid. Advancing streak")
             streak[1] = datetime.timestamp(datetime.now()) # Update timestamp
             streak[2] += 1 # Increment streak
             streak[3] = max(streak[2], streak[3]) # Adjust user high score
@@ -59,18 +51,15 @@ class StreaksCog(commands.Cog):
         
     def save(self) -> None:
         """Save's instance's data dict to streaks.json in the working directory"""
-        self.logger.info("Running save job...")
-        with open("streaks.json", "w") as file:
+        with open("../data/streaks.json", "w") as file:
             try:
                 json.dump(self.data, file)
-                self.logger.info("Save complete.")
             except Exception as e:
-                self.logger.error(f"ERROR: Could not save streak data: {e}")
+                pass
 
     @tasks.loop(time=time(hour=0, minute=0, second=0, tzinfo=timezone.utc))
     async def eod_manage_streaks(self) -> None:
         """Prune expired streaks every day at 12:00 AM (midnight)."""
-        self.logger.info("Peforming daily streak pruning...")
         today = datetime.now().date()
         updatedData = {}
         prunedUsers = []
@@ -84,11 +73,9 @@ class StreaksCog(commands.Cog):
                 prunedUsers.append(self.bot.get_user(int(key)).mention)
             else:
                 updatedData[key] = value
-        self.logger.info('\tStreaks broken: ' + ' '.join(prunedUsers))
         self.data = updatedData
         await self.channel.send('Streaks broken: ' + ' '.join(prunedUsers))
         self.save()
-        self.logger.info("Done.")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
