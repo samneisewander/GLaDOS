@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 import discord
 import json
 import os
 from datetime import timedelta, timezone, datetime, time
 from discord.ext import commands, tasks
 
-# --- Initialize ---
+# --- Cog Definition ---
 
 class StreaksCog(commands.Cog):
 
@@ -14,7 +13,7 @@ class StreaksCog(commands.Cog):
         self.channel = channel
         self._last_member = None
 
-        # Ensure streaks.json exists in current
+        # Ensure path to streaks.json exists
         if not os.path.exists("./data/streaks.json"):
             os.mkdir("./data")
             open("./data/streaks.json", "w").close()
@@ -51,7 +50,7 @@ class StreaksCog(commands.Cog):
         
     def save(self) -> None:
         """Save's instance's data dict to streaks.json in the working directory"""
-        with open("../data/streaks.json", "w") as file:
+        with open("./data/streaks.json", "w") as file:
             try:
                 json.dump(self.data, file)
             except Exception as e:
