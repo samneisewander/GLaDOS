@@ -11,7 +11,6 @@ import streaks
 load_dotenv(override=True)
 DISCORD_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 STREAKS_CHANNEL_ID = int(os.getenv("STREAKS_CHANNEL_ID", 0))
-print(f"Loaded dotenv: {DISCORD_TOKEN}")
 
 # --- Discord Bot Configuration ---
 intents = discord.Intents.default()
