@@ -76,6 +76,25 @@ class StreaksCog(commands.Cog):
         await self.channel.send('Streaks broken: ' + ' '.join(prunedUsers))
         self.save()
 
+    @commands.command()
+    async def highscore(self, context: commands.Context):
+        """Sends the author's streaks high score to the streaks channel."""
+
+        # Guard channels that this cog doesn't care about
+        if not context.channel.id == self.channel.id:
+            return
+        
+        highscore = self.data.get(context.author.id)
+
+        if highscore is None:
+            await context.channel.send(
+                f"{context.author.mention}, you've never been in the dungeon. Send a photo of yourself in the dungeon to begin a streak!"
+            )
+        else:
+            await context.channel.send(
+                f"{context.author.mention}, your highest dungeon streak is {highscore[3]} {"day" if highscore[3] == 1 else "days"}"
+            )
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Handles messages sent to the channel configured to run the streaks game.
