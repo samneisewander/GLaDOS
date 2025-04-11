@@ -18,7 +18,8 @@ class StreaksCog(commands.Cog):
 
         # Ensure path to streaks.json exists
         if not os.path.exists(DATA_STORE_PATH):
-            os.mkdir("/data")
+            if not os.path.exists('./data'):
+                os.mkdir("./data")
             open(DATA_STORE_PATH, "w").close()
 
         # Initialize data store
