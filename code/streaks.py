@@ -30,6 +30,8 @@ class StreaksCog(commands.Cog):
             except Exception as e:
                 self.data = {}
 
+        self.eod_manage_streaks.start()
+        
     # --- Method Definitions --- 
     def increment_streak(self, user: discord.User) -> int:
         """Increments the user's streak by one (defaulting to 1 if there user is not found in dict) if the user has not already had their streak incremented today.
@@ -71,9 +73,10 @@ class StreaksCog(commands.Cog):
 
     # --- Scheduled Tasks ---
 
-    @tasks.loop(time=time(hour=0, minute=0, second=0, tzinfo=timezone.utc))
+    @tasks.loop(time=time(hour=5, minute=0, second=0, tzinfo=timezone.utc))
     async def eod_manage_streaks(self) -> None:
         """Prune expired streaks every day at 12:00 AM (midnight)."""
+        print('Running EOD tasks...')
         today = datetime.now().date()
         updatedData = {}
         prunedUsers = []
@@ -81,7 +84,7 @@ class StreaksCog(commands.Cog):
             if value['streak'] == 0:
                 # Skip users with no streak
                 continue
-            if today - datetime.fromtimestamp(value['timestamp']).date() >= timedelta(days=1):
+            if today - datetime.fromtimestamp(float(value['timestamp'])).date() >= timedelta(days=1):
                 # Streak has expired, update streak and append username to message list
                 updatedData[key] = {
                     "streak": 0,
@@ -92,7 +95,10 @@ class StreaksCog(commands.Cog):
             else:
                 updatedData[key] = value
         self.data = updatedData
-        await self.channel.send('Streaks broken: ' + ' '.join(prunedUsers))
+
+        if prunedUsers:
+            await self.channel.send('Streaks broken: ' + ' '.join(prunedUsers))
+
         self.save()
 
     # --- Commands ---
